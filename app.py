@@ -40,6 +40,8 @@ def login():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Users WHERE email = %s AND password = %s", (email, password))
         user = cursor.fetchone()
+        cursor.execute("SELECt display_name FROM Users WHERE email = %s", (email,))
+        display_name = cursor.fetchone()
         conn.close()
 
         if user:
@@ -47,7 +49,7 @@ def login():
                 "email": email,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
             }, SECRET_KEY, algorithm="HS256")
-            return jsonify({"success": True, "token": token})
+            return jsonify({"success": True, "username": display_name[0]})
         else:
             return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
@@ -56,6 +58,33 @@ def login():
         return jsonify({"success": False, "message": "Database connection error"}), 500
 
 
+
+@app.route('/api/display-name', methods=['POST'])
+def get_display_name():
+    data = request.json
+    email = data.get("email")
+
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            dbname=os.getenv("DB_NAME"),
+            port=os.getenv("DB_PORT")
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT display_name FROM Users WHERE email = %s", (email,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return jsonify({"success": True, "display_name": result[0]})
+        else:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+    except Exception as e:
+        print("Error fetching display name:", e)
+        return jsonify({"success": False, "message": "Server error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
