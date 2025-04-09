@@ -47,7 +47,7 @@ def login():
                 "email": email,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
             }, SECRET_KEY, algorithm="HS256")
-            return jsonify({"success": True, "username": display_name[0]})
+            return jsonify({"success": True, "username": user[0]})
         else:
             return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
@@ -106,11 +106,11 @@ def register_user():
         )
         cursor = conn.cursor()
         cursor.execute("INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)", (email, password, display_name, username))
-        result = cursor.fetchone()
+        user = cursor.fetchone()
         conn.close()
 
-        if result:
-            return jsonify({"success": True})
+        if user:
+            return jsonify({"success": True, "username": user[0]})
         else:
             return jsonify({"sccuess": False, "message": "Couldn't add user in DB"})
     
