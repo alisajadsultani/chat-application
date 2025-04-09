@@ -40,8 +40,6 @@ def login():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Users WHERE email = %s AND password = %s", (email, password))
         user = cursor.fetchone()
-        cursor.execute("SELECt display_name FROM Users WHERE email = %s", (email,))
-        display_name = cursor.fetchone()
         conn.close()
 
         if user:
@@ -85,6 +83,40 @@ def get_display_name():
     except Exception as e:
         print("Error fetching display name:", e)
         return jsonify({"success": False, "message": "Server error"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+@app.route('/api/register-user', methods=['POST'])
+def register_user():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    display_name = data.get("display_name")
+    username = data.get("username")
+
+    try:
+        conn = psycopg2.connect (
+             host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            dbname=os.getenv("DB_NAME"),
+            port=os.getenv("DB_PORT")
+        )
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)", (email, password, display_name, username))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"sccuess": False, "message": "Couldn't add user in DB"})
+    
+    except Exception as e:
+        print("Error registering the user: ", e)
+        return jsonify({"success": False, "message": "Database error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
