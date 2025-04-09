@@ -110,7 +110,7 @@ def register_user():
         conn.close()
 
         if user:
-            return jsonify({"success": True, "username": user[0]})
+            return jsonify({"success": True, "email": user[0]})
         else:
             return jsonify({"sccuess": False, "message": "Couldn't add user in DB"})
     
