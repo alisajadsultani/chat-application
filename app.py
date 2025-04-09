@@ -87,7 +87,6 @@ def get_display_name():
 if __name__ == '__main__':
     app.run(debug=True)
 
-
 @app.route('/api/register-user', methods=['POST'])
 def register_user():
     data = request.json
@@ -97,16 +96,18 @@ def register_user():
     username = data.get("username")
 
     try:
-        conn = psycopg2.connect (
-             host=os.getenv("DB_HOST"),
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             dbname=os.getenv("DB_NAME"),
             port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)", (email, display_name, username, password))
-        user = cursor.rowcount()
+        cursor.execute(
+            "INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)",
+            (email, display_name, username, password)
+        )
         conn.commit()
         conn.close()
 
@@ -114,7 +115,4 @@ def register_user():
 
     except Exception as e:
         print("Error registering the user:", e)
-        return jsonify({"success": False, "message": "Database error"}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        return jsonify({"success": False, "message": str(e)}), 500
