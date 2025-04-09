@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from dotenv import load_dotenv
 import jwt
@@ -12,6 +13,7 @@ import secrets
 # Save hashed_pw to DB, not the raw password
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 CORS(app)
 SECRET_KEY = secrets.token_hex(32)
 
@@ -84,9 +86,6 @@ def get_display_name():
         print("Error fetching display name:", e)
         return jsonify({"success": False, "message": "Server error"}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 @app.route('/api/register-user', methods=['POST'])
 def register_user():
     data = request.json
@@ -116,3 +115,26 @@ def register_user():
     except Exception as e:
         print("Error registering the user:", e)
         return jsonify({"success": False, "message": str(e)}), 500
+
+@socketio.on('connect')
+def handle_connect():
+    print("A user connected")
+    emit('message', {'data': 'Connected to WebSocket!'})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("A user disconnected")
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    # You can log messages to the database here
+    sender = data['sender']
+    recipient = data['recipient']
+    message = data['message']
+    print(f"Message from {sender} to {recipient}: {message}")
+
+    # Broadcast the message to all connected clients (can be limited to the recipient)
+    emit('receive_message', data, broadcast=True)
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
