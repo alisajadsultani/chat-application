@@ -105,17 +105,15 @@ def register_user():
             port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)", (email, password, display_name, username))
-        user = cursor.fetchone()
+        cursor.execute("INSERT INTO Users (email, display_name, username, password) VALUES (%s, %s, %s, %s)", (email, display_name, username, password))
+        user = cursor.rowcount()
+        conn.commit()
         conn.close()
 
-        if user:
-            return jsonify({"success": True, "email": user[0]})
-        else:
-            return jsonify({"sccuess": False, "message": "Couldn't add user in DB"})
-    
+        return jsonify({"success": True, "email": email})
+
     except Exception as e:
-        print("Error registering the user: ", e)
+        print("Error registering the user:", e)
         return jsonify({"success": False, "message": "Database error"}), 500
 
 if __name__ == '__main__':
