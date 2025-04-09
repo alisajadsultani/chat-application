@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import jwt
 import datetime
 import psycopg2
-import bcrypt
 import os
 import secrets
 
